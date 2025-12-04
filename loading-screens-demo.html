@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eeveelution Loading Screens Demo</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Montserrat:wght@600;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: #1e1e16;
+            color: #e5dcc8;
+            overflow-x: hidden;
+        }
+        
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(90, 90, 66, 0.95);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+        
+        .controls h3 {
+            margin-bottom: 15px;
+            font-size: 16px;
+            color: #f5deb3;
+        }
+        
+        .controls label {
+            display: block;
+            margin: 10px 0;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .controls input[type="radio"] {
+            margin-right: 8px;
+        }
+        
+        .controls button {
+            width: 100%;
+            margin-top: 15px;
+            padding: 10px;
+            background: #c4a57b;
+            border: none;
+            border-radius: 6px;
+            color: #3a3a2e;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .controls button:hover {
+            background: #d4a373;
+        }
+        
+        /* Loading Screen Container */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+        
+        /* Modern Eeveelution Theme */
+        .loading-screen.eeveelution {
+            background: linear-gradient(135deg, #f5efe6 0%, #e5dcc8 100%);
+        }
+        
+        .loading-screen.eeveelution-dark {
+            background: linear-gradient(135deg, #1a1a2e 0%, #2a2a3d 100%);
+        }
+        
+        /* Pixelated Retro Theme */
+        .loading-screen.pixelated {
+            background: #e0f8d0;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+        
+        .loading-screen.pixelated-dark {
+            background: #0f380f;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+        
+        /* Add scanlines for retro effect */
+        .loading-screen.pixelated::before,
+        .loading-screen.pixelated-dark::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.1),
+                rgba(0, 0, 0, 0.1) 1px,
+                transparent 1px,
+                transparent 3px
+            );
+            pointer-events: none;
+            opacity: 0.3;
+        }
+        
+        /* Sprite Container */
+        .sprite-container {
+            position: relative;
+            width: 100%;
+            height: 120px;
+            margin-bottom: 40px;
+            overflow: hidden;
+        }
+        
+        .sprite {
+            position: absolute;
+            width: 64px;
+            height: 64px;
+            top: 50%;
+            transform: translateY(-50%);
+            animation: runAcross 4s linear infinite;
+        }
+        
+        .pixelated .sprite,
+        .pixelated-dark .sprite {
+            width: 48px;
+            height: 48px;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+        
+        @keyframes runAcross {
+            0% {
+                left: -80px;
+            }
+            100% {
+                left: calc(100% + 80px);
+            }
+        }
+        
+        /* Sprite animation (frames) */
+        .sprite.animating {
+            animation: runAcross 4s linear infinite, spriteWalk 0.4s steps(4) infinite;
+        }
+        
+        @keyframes spriteWalk {
+            0% { background-position-x: 0; }
+            100% { background-position-x: -256px; }
+        }
+        
+        /* Loading Text */
+        .loading-text {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            text-align: center;
+            padding: 0 20px;
+        }
+        
+        .eeveelution .loading-text {
+            color: #5a5a42;
+        }
+        
+        .eeveelution-dark .loading-text {
+            color: #e5dcc8;
+        }
+        
+        .pixelated .loading-text,
+        .pixelated-dark .loading-text {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 16px;
+            text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+        }
+        
+        .pixelated .loading-text {
+            color: #306230;
+        }
+        
+        .pixelated-dark .loading-text {
+            color: #9bbc0f;
+        }
+        
+        /* Progress Bar */
+        .progress-container {
+            width: 400px;
+            max-width: 80%;
+            height: 20px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .pixelated .progress-container,
+        .pixelated-dark .progress-container {
+            border-radius: 0;
+            height: 24px;
+            border: 3px solid #306230;
+            background: rgba(0,0,0,0.3);
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #7ac7e8, #b565d8);
+            border-radius: 10px;
+            animation: progressFill 3s ease-in-out infinite;
+            position: relative;
+        }
+        
+        .pixelated .progress-bar,
+        .pixelated-dark .progress-bar {
+            border-radius: 0;
+            background: #8bac0f;
+            animation: progressFillPixel 3s steps(20) infinite;
+        }
+        
+        .pixelated-dark .progress-bar {
+            background: #9bbc0f;
+        }
+        
+        @keyframes progressFill {
+            0%, 100% { width: 10%; }
+            50% { width: 90%; }
+        }
+        
+        @keyframes progressFillPixel {
+            0%, 100% { width: 5%; }
+            50% { width: 95%; }
+        }
+        
+        /* Pokéball spinner (optional) */
+        .pokeball-spinner {
+            width: 40px;
+            height: 40px;
+            margin-top: 20px;
+            animation: spin 2s linear infinite;
+        }
+        
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Game Boy Frame (Pixelated themes only) */
+        .gameboy-frame {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 540px;
+            background: #8b8b8b;
+            border-radius: 20px 20px 60px 20px;
+            padding: 60px 80px;
+            box-shadow: 
+                0 0 0 15px #6b6b6b,
+                0 20px 60px rgba(0,0,0,0.5);
+        }
+        
+        .pixelated .gameboy-frame,
+        .pixelated-dark .gameboy-frame {
+            display: block;
+        }
+        
+        .gameboy-screen {
+            width: 100%;
+            height: 100%;
+            background: #9bbc0f;
+            border: 5px solid #2a2a2a;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .pixelated-dark .gameboy-screen {
+            background: #0f380f;
+        }
+        
+        /* Tagline Display */
+        .tagline-display {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(90, 90, 66, 0.9);
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #f5deb3;
+        }
+        
+        .pixelated .tagline-display,
+        .pixelated-dark .tagline-display {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 10px;
+            background: rgba(48, 98, 48, 0.9);
+            border: 3px solid #306230;
+            border-radius: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <h3>🎨 Theme Selector</h3>
+        <label>
+            <input type="radio" name="theme" value="eeveelution" checked>
+            Eeveelution (Light)
+        </label>
+        <label>
+            <input type="radio" name="theme" value="eeveelution-dark">
+            Eeveelution (Dark)
+        </label>
+        <label>
+            <input type="radio" name="theme" value="pixelated">
+            Pixelated Retro
+        </label>
+        <label>
+            <input type="radio" name="theme" value="pixelated-dark">
+            Pixelated Dark (Game Boy)
+        </label>
+        <button onclick="changeTagline()">🔄 Next Tagline</button>
+        <button onclick="changeSprite()">🦊 Change Sprite</button>
+    </div>
+
+    <div id="loadingScreen" class="loading-screen eeveelution">
+        <div class="gameboy-frame">
+            <div class="gameboy-screen">
+                <div class="sprite-container">
+                    <canvas id="spriteCanvas" class="sprite"></canvas>
+                </div>
+                <div class="loading-text" id="loadingText">Eevee is evolving...</div>
+                <div class="progress-container">
+                    <div class="progress-bar"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- For non-Game Boy themes -->
+        <div class="sprite-container" id="mainSpriteContainer">
+            <canvas id="mainSpriteCanvas" class="sprite"></canvas>
+        </div>
+        <div class="loading-text" id="mainLoadingText">Eevee is evolving...</div>
+        <div class="progress-container">
+            <div class="progress-bar"></div>
+        </div>
+        
+        <svg class="pokeball-spinner" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="45" fill="none" stroke="#e74c3c" stroke-width="5"/>
+            <circle cx="50" cy="50" r="45" fill="none" stroke="#f5f5f5" stroke-width="5" stroke-dasharray="141 141" stroke-dashoffset="141"/>
+            <line x1="5" y1="50" x2="95" y2="50" stroke="#333" stroke-width="5"/>
+            <circle cx="50" cy="50" r="12" fill="#f5f5f5" stroke="#333" stroke-width="3"/>
+            <circle cx="50" cy="50" r="6" fill="#333"/>
+        </svg>
+    </div>
+
+    <div class="tagline-display" id="taglineDisplay">
+        Current: Evolution in progress...
+    </div>
+
+    <script>
+        // Taglines database
+        const taglines = {
+            universal: [
+                "Organizing your digital library...",
+                "Indexing the shelves...",
+                "Cataloging new arrivals...",
+                "Searching for the perfect read...",
+                "Transforming formats...",
+                "Building your collection...",
+            ],
+            eeveelution: [
+                { text: "Gotta Read 'Em All!", sprite: "eevee" },
+                { text: "Eevee is evolving...", sprite: "eevee" },
+                { text: "Choose your evolution!", sprite: "eevee" },
+                { text: "Vaporeon streams audiobooks...", sprite: "vaporeon" },
+                { text: "Jolteon charging your ePub...", sprite: "jolteon" },
+                { text: "Flareon warming up PDFs...", sprite: "flareon" },
+                { text: "Espeon senses new releases...", sprite: "espeon" },
+                { text: "Umbreon prowls for comics...", sprite: "umbreon" },
+                { text: "Leafeon growing your TXT collection...", sprite: "leafeon" },
+                { text: "Glaceon preserving archives...", sprite: "glaceon" },
+                { text: "Sylveon organizing articles...", sprite: "sylveon" },
+                { text: "A wild book appeared!", sprite: "eevee" },
+            ]
+        };
+
+        // Evolution colors for sprites
+        const evolutionColors = {
+            eevee: { primary: '#c4a57b', secondary: '#f5deb3', accent: '#8b7355' },
+            vaporeon: { primary: '#7ac7e8', secondary: '#b0e0e6', accent: '#5dade2' },
+            jolteon: { primary: '#ffd700', secondary: '#fff4a3', accent: '#f4d03f' },
+            flareon: { primary: '#ff6b35', secondary: '#ffb399', accent: '#e67e22' },
+            espeon: { primary: '#b565d8', secondary: '#d8b5f5', accent: '#9b59b6' },
+            umbreon: { primary: '#2e2e3d', secondary: '#ffd700', accent: '#34495e' },
+            leafeon: { primary: '#8fbc8f', secondary: '#c3e6c3', accent: '#52be80' },
+            glaceon: { primary: '#b0e0e6', secondary: '#e0f4f7', accent: '#85c1e9' },
+            sylveon: { primary: '#ffb6e1', secondary: '#ffd6f0', accent: '#f8b4d9' }
+        };
+
+        let currentTheme = 'eeveelution';
+        let currentSprite = 'eevee';
+        let currentTaglineIndex = 0;
+
+        // Canvas setup
+        const mainCanvas = document.getElementById('mainSpriteCanvas');
+        const gbCanvas = document.getElementById('spriteCanvas');
+        const mainCtx = mainCanvas.getContext('2d');
+        const gbCtx = gbCanvas.getContext('2d');
+
+        mainCanvas.width = 256;
+        mainCanvas.height = 64;
+        gbCanvas.width = 256;
+        gbCanvas.height = 64;
+
+        // Draw sprite frames
+        function drawSprite(ctx, evolution, frame) {
+            const colors = evolutionColors[evolution];
+            const frameWidth = 64;
+            const x = frame * frameWidth;
+            
+            ctx.clearRect(x, 0, frameWidth, 64);
+            
+            // Simple Eevee-like shape (you'd replace with actual sprites)
+            ctx.fillStyle = colors.primary;
+            
+            // Body
+            ctx.fillRect(x + 20, 30, 24, 20);
+            
+            // Head
+            ctx.beginPath();
+            ctx.arc(x + 32, 25, 12, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Ears
+            ctx.beginPath();
+            ctx.moveTo(x + 22, 20);
+            ctx.lineTo(x + 20, 10);
+            ctx.lineTo(x + 26, 18);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.moveTo(x + 42, 20);
+            ctx.lineTo(x + 44, 10);
+            ctx.lineTo(x + 38, 18);
+            ctx.fill();
+            
+            // Tail
+            ctx.fillStyle = colors.secondary;
+            ctx.beginPath();
+            ctx.arc(x + 46, 42, 8, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Legs (running poses vary by frame)
+            ctx.fillStyle = colors.primary;
+            if (frame % 2 === 0) {
+                ctx.fillRect(x + 22, 50, 6, 10);
+                ctx.fillRect(x + 36, 48, 6, 12);
+            } else {
+                ctx.fillRect(x + 22, 48, 6, 12);
+                ctx.fillRect(x + 36, 50, 6, 10);
+            }
+            
+            // Eyes
+            ctx.fillStyle = '#3a3a2e';
+            ctx.fillRect(x + 28, 24, 3, 3);
+            ctx.fillRect(x + 36, 24, 3, 3);
+            
+            // Accent color details
+            ctx.fillStyle = colors.accent;
+            ctx.fillRect(x + 24, 32, 4, 2); // Chest fluff
+        }
+
+        // Generate all frames for current sprite
+        function generateSpriteFrames(evolution) {
+            for (let i = 0; i < 4; i++) {
+                drawSprite(mainCtx, evolution, i);
+                drawSprite(gbCtx, evolution, i);
+            }
+        }
+
+        // Change theme
+        document.querySelectorAll('input[name="theme"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const screen = document.getElementById('loadingScreen');
+                screen.className = 'loading-screen ' + e.target.value;
+                currentTheme = e.target.value;
+                
+                // Show/hide appropriate sprite containers
+                const isGameBoy = currentTheme.includes('pixelated');
+                document.querySelector('.gameboy-frame').style.display = isGameBoy ? 'block' : 'none';
+                document.getElementById('mainSpriteContainer').style.display = isGameBoy ? 'none' : 'block';
+                document.getElementById('mainLoadingText').style.display = isGameBoy ? 'none' : 'block';
+            });
+        });
+
+        // Change tagline
+        function changeTagline() {
+            const themeTaglines = currentTheme.includes('eeveelution') || currentTheme.includes('pixelated') 
+                ? taglines.eeveelution 
+                : taglines.universal;
+            
+            currentTaglineIndex = (currentTaglineIndex + 1) % themeTaglines.length;
+            const tagline = themeTaglines[currentTaglineIndex];
+            
+            if (typeof tagline === 'object') {
+                document.getElementById('loadingText').textContent = tagline.text;
+                document.getElementById('mainLoadingText').textContent = tagline.text;
+                document.getElementById('taglineDisplay').textContent = `Current: ${tagline.text}`;
+                changeSprite(tagline.sprite);
+            } else {
+                document.getElementById('loadingText').textContent = tagline;
+                document.getElementById('mainLoadingText').textContent = tagline;
+                document.getElementById('taglineDisplay').textContent = `Current: ${tagline}`;
+            }
+        }
+
+        // Change sprite
+        function changeSprite(sprite) {
+            if (!sprite) {
+                const evolutions = Object.keys(evolutionColors);
+                sprite = evolutions[Math.floor(Math.random() * evolutions.length)];
+            }
+            currentSprite = sprite;
+            generateSpriteFrames(sprite);
+        }
+
+        // Initialize
+        generateSpriteFrames('eevee');
+        
+        // Add walking animation via CSS (already defined in styles)
+        mainCanvas.classList.add('animating');
+        gbCanvas.classList.add('animating');
+
+        // Auto-cycle through taglines every 5 seconds
+        setInterval(changeTagline, 5000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+# Python 
+__pycache__/ 
+*.py[cod] 
+venv/ 
+env/ 
+*.egg-info/ 
+ 
+# Node 
+node_modules/ 
+dist/ 
+ 
+# Environment 
+.env 
+*.env 
+ 
+# Database 
+*.db 
+*.sqlite 
+ 
+# Config 
+config/ 
+books/ 
+downloads/ 
+logs/ 
+ 
+# IDE 
+.vscode/ 
+.idea/ 
+ 
+# OS 
+Thumbs.db 
+Thumbs.db 
