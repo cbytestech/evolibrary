@@ -4,10 +4,11 @@ Settings loaded from environment variables and config.yaml
 """
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field, validator
+from pydantic import Field, field_validator
 from pathlib import Path
 from typing import List, Optional
 import os
+import warnings
 
 
 class Settings(BaseSettings):
@@ -87,24 +88,32 @@ class Settings(BaseSettings):
         extra="ignore"
     )
     
-    @validator("secret_key", "jwt_secret")
-    def validate_secrets(cls, v, field):
+    @field_validator("secret_key", "jwt_secret")
+    @classmethod
+    def validate_secrets(cls, v, info):
         """Warn if using default secrets"""
         if v == "CHANGE_ME":
-            import warnings
             warnings.warn(
-                f"⚠️  {field.name} is set to default value. "
+                f"⚠️  {info.field_name} is set to default value. "
                 "Please change it in production!",
                 UserWarning
             )
         return v
     
-    @validator("config_dir", "books_dir", "downloads_dir", "logs_dir")
+    @field_validator("config_dir", "books_dir", "downloads_dir", "logs_dir")
+    @classmethod
     def ensure_path_exists(cls, v):
         """Ensure directory exists"""
         if isinstance(v, str):
             v = Path(v)
-        v.mkdir(parents=True, exist_ok=True)
+        # Only create directories if we're not in Windows development mode
+        # (directories like /config don't make sense on Windows)
+        if not str(v).startswith("/") or os.name != 'nt':
+            try:
+                v.mkdir(parents=True, exist_ok=True)
+            except (PermissionError, OSError):
+                # On Windows with paths like /config, this will fail - that's okay
+                pass
         return v
     
     @property

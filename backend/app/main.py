@@ -1,66 +1,83 @@
 """
 🦠 Evolibrary - Main Application
-"Evolve Your Reading"
-By CookieBytes Technologies
+Self-hosted library management system
 """
 
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-from contextlib import asynccontextmanager
 import logging
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 
 from .config import settings
 from .db.database import init_db, close_db
 from .api import router as api_router
-
-# Setup logging
-logging.basicConfig(
-    level=getattr(logging, settings.log_level.upper()),
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+from .logging_config import (
+    setup_logging,
+    log_startup,
+    log_shutdown,
+    log_database,
+    log_success,
+    log_error
 )
+
+# Setup enhanced logging
+setup_logging(
+    log_level="DEBUG" if settings.debug else "INFO",
+    log_file=settings.logs_dir / "evolibrary.log" if settings.logs_dir.exists() else None,
+    enable_colors=True
+)
+
 logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan handler for startup/shutdown events"""
+    """Lifespan events for startup and shutdown"""
     # Startup
-    logger.info("🦠 Starting Evolibrary...")
-    logger.info(f"Version: {settings.version}")
-    logger.info(f"Environment: {settings.environment}")
+    log_startup(logger, "🦠 Morpho is waking up!")
+    log_startup(logger, f"Environment: {settings.environment}")
+    log_startup(logger, f"Version: {settings.version}")
+    log_startup(logger, f"Debug mode: {settings.debug}")
     
-    # Initialize database
-    await init_db()
-    logger.info("✓ Database initialized")
+    try:
+        log_database(logger, "Initializing database connection...")
+        await init_db()
+        log_success(logger, "Database initialized successfully!")
+    except Exception as e:
+        log_error(logger, "Failed to initialize database", exc=e)
+        raise
     
-    # TODO: Initialize task queue (Dramatiq)
-    # TODO: Start scheduled tasks
-    
-    logger.info("🦠 Morpho is ready to help you evolve your reading!")
+    log_success(logger, "🦠 Morpho is ready! Application startup complete!")
     
     yield
     
     # Shutdown
-    logger.info("🦠 Shutting down Evolibrary...")
-    await close_db()
-    logger.info("✓ Database connections closed")
+    log_shutdown(logger, "🦠 Morpho is going to sleep...")
+    try:
+        await close_db()
+        log_success(logger, "Database connection closed")
+    except Exception as e:
+        log_error(logger, "Error closing database", exc=e)
+    
+    log_shutdown(logger, "🛑 Application shutdown complete")
 
 
-# Create FastAPI application
+# Create FastAPI app
 app = FastAPI(
     title=settings.app_name,
-    description="Self-hosted library management for books, audiobooks, comics & more",
     version=settings.version,
+    description="🦠 Self-hosted library management - Evolve Your Reading",
+    lifespan=lifespan,
     docs_url="/api/docs",
     redoc_url="/api/redoc",
-    openapi_url="/api/openapi.json",
-    lifespan=lifespan
+    openapi_url="/api/openapi.json"
 )
 
-# CORS middleware
+# CORS Middleware
+logger.info(f"🔧 Setting up CORS for origins: {settings.cors_origins}")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -69,11 +86,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include API router
+logger.info("🔀 Registering API routes")
+app.include_router(api_router, prefix="/api")
 
-# Health check endpoint
+
 @app.get("/api/health")
 async def health_check():
-    """Health check endpoint for Docker healthcheck"""
+    """Health check endpoint"""
+    logger.debug("💚 Health check requested")
     return {
         "status": "healthy",
         "app": settings.app_name,
@@ -82,55 +103,56 @@ async def health_check():
     }
 
 
-# Root endpoint
 @app.get("/api")
 async def root():
-    """API root endpoint"""
+    """Root API endpoint"""
+    logger.debug("🌐 Root API endpoint requested")
     return {
         "app": settings.app_name,
         "version": settings.version,
-        "tagline": "Evolve Your Reading",
-        "mascot": "Morpho 🦠",
+        "message": "Welcome to Evolibrary! 🦠",
         "docs": "/api/docs",
         "health": "/api/health"
     }
 
 
-# Include API router
-app.include_router(api_router, prefix="/api")
-
-
-# Serve frontend static files (from React build)
+# Serve static files from frontend build (for production)
 frontend_dist = Path(__file__).parent.parent.parent / "frontend" / "dist"
-
 if frontend_dist.exists():
+    logger.info(f"📦 Serving frontend from: {frontend_dist}")
     app.mount("/assets", StaticFiles(directory=frontend_dist / "assets"), name="assets")
     
     @app.get("/{full_path:path}")
     async def serve_frontend(full_path: str):
-        """Serve React frontend for all non-API routes"""
+        """Serve frontend or fallback to index.html for React Router"""
+        # Skip API routes
+        if full_path.startswith("api/"):
+            return JSONResponse({"error": "Not found"}, status_code=404)
+        
         file_path = frontend_dist / full_path
         
         # If file exists, serve it
         if file_path.is_file():
             return FileResponse(file_path)
         
-        # Otherwise serve index.html (for React Router)
+        # Otherwise, serve index.html (for React Router)
         index_path = frontend_dist / "index.html"
         if index_path.exists():
             return FileResponse(index_path)
         
-        raise HTTPException(status_code=404, detail="Not found")
+        return JSONResponse({"error": "Frontend not built"}, status_code=404)
 else:
-    logger.warning("⚠️  Frontend dist directory not found. Running in API-only mode.")
+    logger.warning("⚠️  Frontend build directory not found. Run 'npm run build' in frontend/")
 
 
 if __name__ == "__main__":
     import uvicorn
+    
+    logger.info("🚀 Starting Evolibrary in standalone mode")
     uvicorn.run(
-        "app.main:app",
+        "backend.app.main:app",
         host=settings.host,
         port=settings.port,
-        reload=settings.environment == "development",
+        reload=settings.debug,
         log_level=settings.log_level.lower()
     )

@@ -11,7 +11,8 @@ router = APIRouter()
 # Import and include books router
 from backend.app.api.routes.books import router as books_router
 
-router.include_router(books_router, tags=["Books"])
+router.include_router(books_router, prefix="/books", tags=["Books"])
+
 # TODO: Implement these routers
 # from .routes import authors, downloads, settings, indexers
 # router.include_router(authors.router, prefix="/authors", tags=["Authors"])

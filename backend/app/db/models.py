@@ -3,10 +3,9 @@
 SQLAlchemy ORM models for the application
 """
 
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text, ForeignKey, Table
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text, ForeignKey, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from datetime import datetime
 
 from .database import Base
 
@@ -17,30 +16,27 @@ class Book(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(500), nullable=False, index=True)
-    author = Column(String(200), index=True)
+    
+    # Author relationship
+    author_id = Column(Integer, ForeignKey("authors.id"), nullable=True)
+    author_name = Column(String(200), nullable=False, index=True)  # Denormalized for quick access
+    
+    # Book identifiers
     isbn = Column(String(13), unique=True, index=True)
-    isbn13 = Column(String(13), unique=True, index=True)
     
     # Metadata
     description = Column(Text)
     publisher = Column(String(200))
-    publish_date = Column(DateTime)
+    published_date = Column(String(50))  # Store as string for flexibility
     page_count = Column(Integer)
-    language = Column(String(10))
+    language = Column(String(10), default="en")
     
     # Cover
     cover_url = Column(String(500))
     cover_path = Column(String(500))
     
-    # Ratings
-    goodreads_rating = Column(String(10))
-    google_rating = Column(String(10))
-    
     # Organization
-    series = Column(String(200))
-    series_position = Column(String(20))
-    genres = Column(Text)  # JSON array
-    tags = Column(Text)  # JSON array
+    categories = Column(JSON, default=list)  # List of categories/genres
     
     # Tracking
     monitored = Column(Boolean, default=False)
@@ -48,14 +44,50 @@ class Book(Base):
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     
     # Relationships
+    author = relationship("Author", back_populates="books")
     files = relationship("BookFile", back_populates="book", cascade="all, delete-orphan")
     downloads = relationship("Download", back_populates="book", cascade="all, delete-orphan")
     
     def __repr__(self):
-        return f"<Book(id={self.id}, title='{self.title}', author='{self.author}')>"
+        return f"<Book(id={self.id}, title='{self.title}', author='{self.author_name}')>"
+
+
+class Author(Base):
+    """Author model"""
+    __tablename__ = "authors"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(200), nullable=False, unique=True, index=True)
+    
+    # Metadata
+    bio = Column(Text)
+    birth_date = Column(String(50))
+    death_date = Column(String(50))
+    website = Column(String(500))
+    
+    # Images
+    photo_url = Column(String(500))
+    photo_path = Column(String(500))
+    
+    # External IDs
+    goodreads_id = Column(String(50))
+    google_books_id = Column(String(50))
+    
+    # Tracking
+    monitored = Column(Boolean, default=False)
+    
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+    # Relationships
+    books = relationship("Book", back_populates="author")
+    
+    def __repr__(self):
+        return f"<Author(id={self.id}, name='{self.name}')>"
 
 
 class BookFile(Base):
@@ -85,7 +117,7 @@ class BookFile(Base):
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     
     # Relationships
     book = relationship("Book", back_populates="files")
@@ -134,49 +166,6 @@ class Download(Base):
     
     def __repr__(self):
         return f"<Download(id={self.id}, status='{self.status}', progress={self.progress}%)>"
-
-
-class Author(Base):
-    """Author model"""
-    __tablename__ = "authors"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(200), nullable=False, unique=True, index=True)
-    
-    # Metadata
-    bio = Column(Text)
-    birth_date = Column(DateTime)
-    death_date = Column(DateTime)
-    website = Column(String(500))
-    
-    # Images
-    photo_url = Column(String(500))
-    photo_path = Column(String(500))
-    
-    # External IDs
-    goodreads_id = Column(String(50))
-    google_books_id = Column(String(50))
-    
-    # Tracking
-    monitored = Column(Boolean, default=False)
-    
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    
-    def __repr__(self):
-        return f"<Author(id={self.id}, name='{self.name}')>"
-
-
-# TODO: Add more models
-# - Indexer
-# - DownloadClient
-# - NotificationProvider
-# - EvolutionProfile (quality profiles)
-# - Series
-# - Tag
-# - User (for multi-user support)
-# - Settings
 
 
 __all__ = ["Base", "Book", "BookFile", "Download", "Author"]

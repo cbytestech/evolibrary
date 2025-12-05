@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class', // ← MUST be here at top level!
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -45,5 +46,4 @@ export default {
     },
   },
   plugins: [],
-  darkMode: 'class',
 }
