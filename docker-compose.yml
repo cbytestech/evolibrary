@@ -1,124 +1,25 @@
-version: '3.8'
-
-# 🦠 Evolibrary - Docker Compose Configuration
-# "Evolve Your Reading" 
-# By CookieBytes Technologies
-
 services:
   evolibrary:
-    image: cookiebytestech/evolibrary:latest
+    build: .
     container_name: evolibrary
-    environment:
-      # User/Group ID (match your host user)
-      - PUID=1000
-      - PGID=1000
-      
-      # Timezone
-      - TZ=America/New_York
-      
-      # Database (SQLite by default, PostgreSQL optional)
-      - DATABASE_URL=sqlite:////config/evolibrary.db
-      # For PostgreSQL: postgresql://user:password@postgres:5432/evolibrary
-      
-      # API Settings
-      - HOST=0.0.0.0
-      - PORT=8787
-      - LOG_LEVEL=info
-      
-      # Security (generate secure keys!)
-      - SECRET_KEY=CHANGE_ME_TO_SOMETHING_RANDOM
-      - JWT_SECRET=CHANGE_ME_TO_SOMETHING_RANDOM
-      
-      # External Services (optional)
-      - PROWLARR_URL=http://prowlarr:9696
-      - PROWLARR_API_KEY=
-      - JACKETT_URL=http://jackett:9117
-      - JACKETT_API_KEY=
-      - KAVITA_URL=http://kavita:5000
-      - KAVITA_API_KEY=
-      
-      # Metadata Providers
-      - GOOGLE_BOOKS_API_KEY=
-      - GOODREADS_API_KEY=
-      
-      # Feature Flags
-      - ENABLE_NOTIFICATIONS=true
-      - ENABLE_WEBHOOKS=true
-      - ENABLE_METADATA_FETCHING=true
     
+    environment:
+      # Database location - SQLite file stored in /config
+      - DATABASE_URL=sqlite:///config/evolibrary.db
+      
+      # Server settings
+      - HOST=0.0.0.0
+      - PORT=8000
+      
     volumes:
-      # Configuration and database
+      # Config directory (database stored here)
       - ./config:/config
       
-      # Your organized library
-      - /path/to/your/books:/books
+      # Your book library
+      - /path/to/books:/books
       
-      # Download client output directory
-      - /path/to/your/downloads:/downloads
-      
-      # Optional: Logs directory
-      - ./logs:/app/logs
-    
     ports:
-      - "8787:8787"
+      - "8000:8000"  # Backend API
+      - "3000:3000"  # Frontend
     
     restart: unless-stopped
-    
-    networks:
-      - evolibrary-network
-    
-    # Health check
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8787/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    
-    # Resource limits (adjust based on your needs)
-    deploy:
-      resources:
-        limits:
-          cpus: '2'
-          memory: 2G
-        reservations:
-          cpus: '0.5'
-          memory: 512M
-
-  # Optional: PostgreSQL (for production use)
-  postgres:
-    image: postgres:15-alpine
-    container_name: evolibrary-postgres
-    environment:
-      - POSTGRES_USER=evolibrary
-      - POSTGRES_PASSWORD=CHANGE_ME
-      - POSTGRES_DB=evolibrary
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    networks:
-      - evolibrary-network
-    restart: unless-stopped
-    profiles:
-      - postgres
-
-  # Optional: Redis (for task queue and caching)
-  redis:
-    image: redis:7-alpine
-    container_name: evolibrary-redis
-    command: redis-server --appendonly yes
-    volumes:
-      - redis-data:/data
-    networks:
-      - evolibrary-network
-    restart: unless-stopped
-    profiles:
-      - redis
-
-networks:
-  evolibrary-network:
-    name: evolibrary-network
-    driver: bridge
-
-volumes:
-  postgres-data:
-  redis-data:
