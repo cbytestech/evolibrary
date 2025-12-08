@@ -9,6 +9,7 @@ export function LoggingSettings() {
   const [commandOutput, setCommandOutput] = useState('')
   const [isExecuting, setIsExecuting] = useState(false)
   const [showSaved, setShowSaved] = useState(false)
+  const logsEndRef = useRef<HTMLDivElement>(null)
   const eventSourceRef = useRef<EventSource | null>(null)
 
   // Load saved log level
@@ -18,6 +19,13 @@ export function LoggingSettings() {
       setLogLevel(saved)
     }
   }, [])
+
+  // Auto-scroll logs
+  useEffect(() => {
+    if (logsEndRef.current && isStreaming) {
+      logsEndRef.current.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [logs, isStreaming])
 
   const handleLogLevelChange = async (level: string) => {
     setLogLevel(level)
@@ -161,6 +169,7 @@ export function LoggingSettings() {
               </div>
             ))
           )}
+          <div ref={logsEndRef} />
         </div>
       </div>
 

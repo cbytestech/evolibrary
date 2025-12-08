@@ -7,6 +7,7 @@ import { UISettings } from '../components/settings/UISettings'
 import { LoggingSettings } from '../components/settings/LoggingSettings'
 import { HealthSettings } from '../components/settings/HealthSettings'
 import { GeneralSettings } from '../components/settings/GeneralSettings'
+import { AppsSettings } from '../components/settings/AppsSettings'
 import { ComingSoonSettings } from '../components/settings/ComingSoonSettings'
 
 interface SettingsPageProps {
@@ -45,6 +46,8 @@ export function SettingsPage({
         return <LibrariesSettings />
       case 'ui':
         return <UISettings currentTheme={currentTheme} onThemeChange={onThemeChange} />
+      case 'apps':
+        return <AppsSettings />
       case 'logging':
         return <LoggingSettings />
       case 'health':

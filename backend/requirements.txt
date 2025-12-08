@@ -89,4 +89,4 @@ mypy==1.8.0
 
 PyPDF2>=3.0.0          # For PDF metadata
 watchdog>=3.0.0        # For auto-scan file watching
-ebooklib>=0.18         # Better EPUB parsing (optional)
+ebooklib>=0.18         # Better EPUB parsing (optional)"httpx>=0.24.0" 

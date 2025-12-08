@@ -10,11 +10,12 @@ export function SettingsLayout({ children, currentSection, onSectionChange }: Se
   const sections = [
     { id: 'libraries', icon: '📚', label: 'Libraries', description: 'Manage book collections' },
     { id: 'ui', icon: '🎨', label: 'UI', description: 'Themes and appearance' },
+    { id: 'apps', icon: '🔌', label: 'Apps', description: 'External connections' },
     { id: 'indexers', icon: '🔍', label: 'Indexers', description: 'Search providers', badge: 'Soon' },
     { id: 'download-clients', icon: '⬇️', label: 'Download Clients', description: 'Deluge, qBittorrent', badge: 'Soon' },
     { id: 'import-lists', icon: '📥', label: 'Import Lists', description: 'Auto-import from lists', badge: 'Soon' },
     { id: 'connect', icon: '🔔', label: 'Connect', description: 'Notifications & webhooks', badge: 'Soon' },
-    { id: 'metadata', icon: '📝', label: 'Metadata', description: 'Google Books & sources', badge: 'Soon' },
+    { id: 'metadata', icon: '📋', label: 'Metadata', description: 'Google Books & sources', badge: 'Soon' },
     { id: 'logging', icon: '📊', label: 'Logging', description: 'Log levels and files' },
     { id: 'health', icon: '🏥', label: 'Health', description: 'System diagnostics' },
     { id: 'general', icon: '⚡', label: 'General', description: 'Port, auth, updates' },

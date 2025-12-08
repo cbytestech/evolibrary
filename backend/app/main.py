@@ -12,7 +12,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 
 from .config import settings
-from .db.database import init_db, close_db
+from .db.database import init_db, close_db, get_db
+from .db.migrations import run_migrations
 from .api import router as api_router
 from .logging_config import (
     setup_logging,
@@ -46,6 +47,18 @@ async def lifespan(app: FastAPI):
         log_database(logger, "Initializing database connection...")
         await init_db()
         log_success(logger, "Database initialized successfully!")
+        
+        # Run database migrations
+        log_database(logger, "Running database migrations...")
+        try:
+            async for db in get_db():
+                await run_migrations(db)
+                break
+            log_success(logger, "Database migrations complete!")
+        except Exception as e:
+            log_error(logger, "Migration error (non-critical)", exc=e)
+            # Don't crash - migrations might fail if columns already exist
+        
     except Exception as e:
         log_error(logger, "Failed to initialize database", exc=e)
         raise
