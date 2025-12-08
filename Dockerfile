@@ -1,20 +1,13 @@
-# 🦠 Evolibrary - Multi-stage Docker Build
-# "Evolve Your Reading"
-# By CookieBytes Technologies
-
-# Stage 1: Frontend Build
+# Stage 1: Frontend Builder
 FROM node:20-alpine AS frontend-builder
 
 WORKDIR /app/frontend
 
-# Copy package files
-COPY frontend/package*.json ./
-
-# Install dependencies
-RUN npm ci --only=production
-
 # Copy frontend source
 COPY frontend/ ./
+
+# Install dependencies
+RUN npm ci
 
 # Build frontend
 RUN npm run build
@@ -44,14 +37,15 @@ LABEL maintainer="CookieBytes Technologies <support@cookiebytestech.com>"
 LABEL description="Evolibrary - Self-Hosted Library Management"
 LABEL version="0.1.0"
 LABEL org.opencontainers.image.source="https://github.com/cookiebytestech/evolibrary"
-LABEL org.opencontainers.image.description="Self-hosted library management for books, audiobooks, comics & more"
+LABEL org.opencontainers.image.description="Modern self-hosted book manager with dark mode, themes, and automation"
 LABEL org.opencontainers.image.licenses="GPL-3.0"
 
-# Install runtime dependencies
+# Install runtime dependencies including gosu
 RUN apt-get update && apt-get install -y \
     curl \
     ca-certificates \
     sqlite3 \
+    gosu \
     && rm -rf /var/lib/apt/lists/*
 
 # Create app user for security
@@ -66,43 +60,38 @@ COPY --from=backend-base /usr/local/lib/python3.11/site-packages /usr/local/lib/
 COPY --from=backend-base /usr/local/bin /usr/local/bin
 
 # Copy backend application
-COPY --chown=evolibrary:evolibrary backend/ ./backend/
+COPY --chown=root:root backend/ ./backend/
 
 # Copy built frontend from frontend-builder
-COPY --from=frontend-builder --chown=evolibrary:evolibrary /app/frontend/dist ./frontend/dist
+COPY --from=frontend-builder --chown=root:root /app/frontend/dist ./frontend/dist
 
 # Create necessary directories
 RUN mkdir -p /config /books /downloads && \
-    chown -R evolibrary:evolibrary /config /books /downloads /app
+    chown -R root:root /app
 
 # Environment variables
 ENV PYTHONUNBUFFERED=1 \
     PUID=1000 \
     PGID=1000 \
     TZ=UTC \
-    CONFIG_DIR=/config \
-    BOOKS_DIR=/books \
-    DOWNLOADS_DIR=/downloads \
     DATABASE_URL=sqlite:////config/evolibrary.db \
     HOST=0.0.0.0 \
-    PORT=8787
+    PORT=8000 \
+    LOG_LEVEL=info \
+    DEBUG=false
 
-# Expose port
-EXPOSE 8787
+# Expose ports
+EXPOSE 8000 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:8787/api/health || exit 1
+    CMD curl -f http://localhost:8000/api/health || exit 1
 
-# Switch to app user
-USER evolibrary
-
-# Volume mount points
-VOLUME ["/config", "/books", "/downloads"]
+# Start as root (entrypoint will handle privilege dropping)
+USER root
 
 # Copy entrypoint script
-COPY --chown=evolibrary:evolibrary docker/entrypoint.sh /entrypoint.sh
+COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8787"]

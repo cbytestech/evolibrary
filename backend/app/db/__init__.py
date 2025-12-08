@@ -3,7 +3,7 @@
 """
 
 from .database import Base, engine, get_db, get_db_session, init_db, close_db
-from .models import Book, BookFile, Download, Author
+from .models import Book, Library
 
 __all__ = [
     "Base",
@@ -13,7 +13,5 @@ __all__ = [
     "init_db",
     "close_db",
     "Book",
-    "BookFile",
-    "Download",
-    "Author",
+    "Library",  # ← Changed!
 ]

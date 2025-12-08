@@ -72,7 +72,7 @@ faker==22.0.0
 
 # Download Clients
 deluge-client==1.10.2
-qbittorrent-api==2024.1.59
+qbittorrent-api==2025.11.1
 transmission-rpc==7.0.0
 
 # Notifications
@@ -86,3 +86,7 @@ rich==13.7.0
 black==23.12.1
 ruff==0.1.11
 mypy==1.8.0
+
+PyPDF2>=3.0.0          # For PDF metadata
+watchdog>=3.0.0        # For auto-scan file watching
+ebooklib>=0.18         # Better EPUB parsing (optional)

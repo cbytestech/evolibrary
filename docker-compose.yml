@@ -1,6 +1,6 @@
 services:
   evolibrary:
-    build: .
+    image: cbytestech/evolibrary:latest
     container_name: evolibrary
     
     environment:

@@ -8,10 +8,16 @@ from fastapi import APIRouter
 # Create main API router
 router = APIRouter()
 
-# Import and include books router
-from backend.app.api.routes.books import router as books_router
+# Import and include routers
+from .routes.books import router as books_router
+from .routes.libraries import router as libraries_router
 
-router.include_router(books_router, tags=["Books"])
+router.include_router(books_router, prefix="/books", tags=["Books"])
+router.include_router(libraries_router, tags=["Libraries"])  # Libraries router already has /libraries prefix
+
+from backend.app.api.routes.admin import router as admin_router
+router.include_router(admin_router, tags=["Admin"])
+
 # TODO: Implement these routers
 # from .routes import authors, downloads, settings, indexers
 # router.include_router(authors.router, prefix="/authors", tags=["Authors"])
@@ -28,6 +34,7 @@ async def api_status():
         "message": "Morpho is ready! 🦠",
         "endpoints": {
             "books": "/api/books - List, search, create, update, delete books",
+            "libraries": "/api/libraries - Manage book libraries and scanning",
             "authors": "/api/authors - (Coming soon)",
             "downloads": "/api/downloads - (Coming soon)",
             "settings": "/api/settings - (Coming soon)",

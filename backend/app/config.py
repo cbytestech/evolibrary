@@ -48,9 +48,16 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
     
-    # CORS
+# CORS
     cors_origins: List[str] = Field(
-        default=["http://localhost:3000", "http://localhost:8787"],
+        default=[
+            "http://localhost:3000",      # Local dev
+            "http://localhost:8000",      # Local backend
+            "http://127.0.0.1:3000",      # Local dev (explicit)
+            "http://127.0.0.1:3001",      # Local production
+            "http://10.0.0.50:3000",      # Pi frontend dev
+            "http://10.0.0.50:3001",      # Pi frontend prod ← THE FIX!
+        ],
         alias="CORS_ORIGINS"
     )
     

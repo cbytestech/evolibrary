@@ -35,9 +35,9 @@ class BookBase(BaseModel):
     published_date: Optional[str] = None
     description: Optional[str] = None
     cover_url: Optional[str] = None
-    language: str = Field(default="en", max_length=10)
+    language: Optional[str] = Field(None, max_length=10)
     page_count: Optional[int] = Field(None, ge=0)
-    categories: list[str] = Field(default_factory=list)
+    categories: Optional[list[str]] = Field(default_factory=list)
 
 
 class BookCreate(BookBase):

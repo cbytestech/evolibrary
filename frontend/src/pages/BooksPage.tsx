@@ -3,19 +3,24 @@ import { Book, BookListResponse } from '../types/book'
 import { BookCard } from '../components/BookCard'
 import { SearchBar } from '../components/SearchBar'
 import { Header } from '../components/Header'
+import { Footer } from '../components/Footer'
+import { API_BASE_URL } from '../config/api'
 
 interface BooksPageProps {
-  onNavigate?: (page: 'home' | 'books') => void
+  onNavigate?: (page: 'home' | 'books' | 'settings') => void
+  onNavigateToLogs?: () => void
   currentTheme?: string
   onThemeChange?: (theme: string) => void
 }
 
-export function BooksPage({ onNavigate, currentTheme = 'morpho', onThemeChange }: BooksPageProps) {
+export function BooksPage({ onNavigate, onNavigateToLogs, currentTheme = 'morpho', onThemeChange }: BooksPageProps) {
   const [books, setBooks] = useState<Book[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
 
   // Theme-based background classes
   const getBackgroundClass = () => {
@@ -26,16 +31,25 @@ export function BooksPage({ onNavigate, currentTheme = 'morpho', onThemeChange }
     return 'bg-gray-50 dark:bg-gradient-to-br dark:from-gray-900 dark:via-emerald-950 dark:to-gray-900'
   }
 
-  const fetchBooks = async (query?: string) => {
+  const fetchBooks = async (query?: string, pageNum: number = 1) => {
     setLoading(true)
     setError(null)
 
     try {
-      const url = query 
-        ? `/api/books/search?query=${encodeURIComponent(query)}`
-        : '/api/books'
+      const params = new URLSearchParams({
+        page: pageNum.toString(),
+        page_size: '35' // 7 columns x 5 rows
+      })
       
-      const response = await fetch(url)
+      if (query) {
+        params.append('query', query)
+      }
+      
+      const url = query 
+        ? `/api/books/search?${params}`
+        : `/api/books?${params}`
+      
+      const response = await fetch(`${API_BASE_URL}${url}`)
       
       if (!response.ok) {
         throw new Error('Failed to fetch books')
@@ -44,6 +58,8 @@ export function BooksPage({ onNavigate, currentTheme = 'morpho', onThemeChange }
       const data: BookListResponse = await response.json()
       setBooks(data.books)
       setTotal(data.total)
+      setPage(data.page)
+      setTotalPages(data.pages)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
       console.error('Error fetching books:', err)
@@ -58,7 +74,8 @@ export function BooksPage({ onNavigate, currentTheme = 'morpho', onThemeChange }
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
-    fetchBooks(query)
+    setPage(1)
+    fetchBooks(query, 1)
   }
 
   return (
@@ -136,11 +153,48 @@ export function BooksPage({ onNavigate, currentTheme = 'morpho', onThemeChange }
 
         {/* Books Grid */}
         {!loading && !error && books.length > 0 && (
-          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
-            {books.map((book) => (
-              <BookCard key={book.id} book={book} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-4">
+              {books.map((book) => (
+                <BookCard key={book.id} book={book} />
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-8">
+                <button
+                  onClick={() => {
+                    const newPage = page - 1
+                    setPage(newPage)
+                    fetchBooks(searchQuery, newPage)
+                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                  }}
+                  disabled={page === 1}
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-gray-800 dark:text-gray-200 rounded-lg font-semibold transition-colors"
+                >
+                  ← Previous
+                </button>
+                
+                <span className="px-4 py-2 text-gray-700 dark:text-gray-300">
+                  Page {page} of {totalPages}
+                </span>
+                
+                <button
+                  onClick={() => {
+                    const newPage = page + 1
+                    setPage(newPage)
+                    fetchBooks(searchQuery, newPage)
+                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                  }}
+                  disabled={page === totalPages}
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-gray-800 dark:text-gray-200 rounded-lg font-semibold transition-colors"
+                >
+                  Next →
+                </button>
+              </div>
+            )}
+          </>
         )}
 
         {/* Back to Top */}
@@ -155,6 +209,8 @@ export function BooksPage({ onNavigate, currentTheme = 'morpho', onThemeChange }
           </div>
         )}
       </div>
+      
+      <Footer onNavigate={onNavigate} onNavigateToLogs={onNavigateToLogs} />
       </div>
     </>
   )

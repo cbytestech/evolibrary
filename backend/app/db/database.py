@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.pool import StaticPool
 from contextlib import asynccontextmanager
+from typing import AsyncGenerator
 import logging
 
 from ..config import settings
@@ -67,8 +68,8 @@ async def close_db():
         logger.error(f"✗ Failed to close database: {e}")
 
 
-@asynccontextmanager
-async def get_db():
+# FastAPI dependency for database session
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Dependency for getting database session"""
     async with AsyncSessionLocal() as session:
         try:
@@ -81,11 +82,8 @@ async def get_db():
             await session.close()
 
 
-# Dependency function for FastAPI
-async def get_db_session() -> AsyncSession:
-    """FastAPI dependency for database session"""
-    async with get_db() as session:
-        yield session
+# Alias for backwards compatibility
+get_db_session = get_db
 
 
 __all__ = ["Base", "engine", "AsyncSessionLocal", "get_db", "get_db_session", "init_db", "close_db"]

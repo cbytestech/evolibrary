@@ -19,7 +19,7 @@ from backend.app.services.books import BookService
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/books", tags=["Books"])
+router = APIRouter(tags=["Books"])
 
 
 @router.get("", response_model=BookListResponse)
