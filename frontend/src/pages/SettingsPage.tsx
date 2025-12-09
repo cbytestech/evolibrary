@@ -8,6 +8,7 @@ import { LoggingSettings } from '../components/settings/LoggingSettings'
 import { HealthSettings } from '../components/settings/HealthSettings'
 import { GeneralSettings } from '../components/settings/GeneralSettings'
 import { AppsSettings } from '../components/settings/AppsSettings'
+import { IndexersSettings } from '../components/settings/IndexersSettings'
 import { ComingSoonSettings } from '../components/settings/ComingSoonSettings'
 
 interface SettingsPageProps {
@@ -48,13 +49,14 @@ export function SettingsPage({
         return <UISettings currentTheme={currentTheme} onThemeChange={onThemeChange} />
       case 'apps':
         return <AppsSettings />
+      case 'indexers':
+        return <IndexersSettings />
       case 'logging':
         return <LoggingSettings />
       case 'health':
         return <HealthSettings />
       case 'general':
         return <GeneralSettings />
-      case 'indexers':
       case 'download-clients':
       case 'import-lists':
       case 'connect':
