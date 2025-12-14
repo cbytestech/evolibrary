@@ -11,6 +11,9 @@ export interface Book {
   language: string
   page_count?: number
   categories: string[]
+  file_path?: string
+  file_format?: string  // File extension (epub, mobi, pdf, m4b, mp3, cbz, etc.)
+  file_size?: number
   created_at: string
   updated_at: string
 }

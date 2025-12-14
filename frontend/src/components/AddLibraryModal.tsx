@@ -1,13 +1,16 @@
-import { useState } from 'react'
-import { LibraryCreate } from '../types/library'
+import { useState, useEffect } from 'react'
+import { LibraryCreate, Library } from '../types/library'
 import { API_BASE_URL } from '../config/api'
 
 interface AddLibraryModalProps {
+  library?: Library | null
   onClose: () => void
   onSuccess: () => void
 }
 
-export function AddLibraryModal({ onClose, onSuccess }: AddLibraryModalProps) {
+export function AddLibraryModal({ library, onClose, onSuccess }: AddLibraryModalProps) {
+  const isEditMode = !!library
+  
   const [formData, setFormData] = useState<LibraryCreate>({
     name: '',
     path: '',
@@ -23,14 +26,37 @@ export function AddLibraryModal({ onClose, onSuccess }: AddLibraryModalProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Pre-fill form when editing
+  useEffect(() => {
+    if (library) {
+      setFormData({
+        name: library.name,
+        path: library.path,
+        library_type: library.library_type as any,
+        auto_scan: library.auto_scan,
+        scan_schedule: library.scan_schedule,
+        scan_on_startup: library.scan_on_startup || false,
+        fetch_metadata: library.fetch_metadata,
+        download_covers: library.download_covers,
+        organize_files: library.organize_files || false,
+      })
+    }
+  }, [library])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/libraries`, {
-        method: 'POST',
+      const url = isEditMode 
+        ? `${API_BASE_URL}/api/libraries/${library!.id}`
+        : `${API_BASE_URL}/api/libraries`
+      
+      const method = isEditMode ? 'PUT' : 'POST'
+      
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -39,7 +65,7 @@ export function AddLibraryModal({ onClose, onSuccess }: AddLibraryModalProps) {
 
       if (!response.ok) {
         const data = await response.json()
-        throw new Error(data.detail || 'Failed to create library')
+        throw new Error(data.detail || `Failed to ${isEditMode ? 'update' : 'create'} library`)
       }
 
       onSuccess()
@@ -57,7 +83,7 @@ export function AddLibraryModal({ onClose, onSuccess }: AddLibraryModalProps) {
         <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              📚 Add Library
+              {isEditMode ? '✏️ Edit Library' : '📚 Add Library'}
             </h2>
             <button
               onClick={onClose}
@@ -277,7 +303,12 @@ export function AddLibraryModal({ onClose, onSuccess }: AddLibraryModalProps) {
                   : 'bg-morpho-primary hover:bg-morpho-dark text-white'
               }`}
             >
-              {loading ? 'Creating...' : formData.scan_on_startup ? 'Create & Scan' : 'Create Library'}
+              {loading 
+                ? (isEditMode ? 'Updating...' : 'Creating...') 
+                : isEditMode 
+                  ? 'Update Library' 
+                  : (formData.scan_on_startup ? 'Create & Scan' : 'Create Library')
+              }
             </button>
           </div>
         </form>

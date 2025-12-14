@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 
 interface HeaderProps {
-  onNavigate?: (page: 'home' | 'books' | 'settings') => void
-  currentPage?: 'home' | 'books' | 'settings'
+  onNavigate?: (page: 'home' | 'library' | 'settings') => void
+  currentPage?: 'home' | 'library' | 'settings'
   onThemeChange?: (theme: string) => void
 }
 
@@ -45,7 +45,7 @@ export function Header({ onNavigate, currentPage = 'home', onThemeChange }: Head
     setShowSettings(false)
   }
 
-  const handleNavigation = (page: 'home' | 'books' | 'settings') => {
+  const handleNavigation = (page: 'home' | 'library' | 'settings') => {
     setShowMobileMenu(false)
     if (onNavigate) {
       onNavigate(page)
@@ -67,7 +67,7 @@ export function Header({ onNavigate, currentPage = 'home', onThemeChange }: Head
             className="flex items-center gap-3 group"
           >
             <div className="text-3xl transition-transform group-hover:scale-110">
-              🦠
+              🦋
             </div>
             <div>
               <h1 className="text-2xl font-bold text-white group-hover:text-morpho-light transition-colors">
@@ -93,14 +93,14 @@ export function Header({ onNavigate, currentPage = 'home', onThemeChange }: Head
             </button>
             
             <button
-              onClick={() => handleNavigation('books')}
+              onClick={() => handleNavigation('library')}
               className={`px-4 py-2 rounded-lg font-semibold transition-all ${
-                currentPage === 'books'
+                currentPage === 'library'
                   ? 'bg-morpho-primary text-white'
                   : 'text-gray-300 hover:text-white hover:bg-white/10'
               }`}
             >
-              📚 Books
+              📚 Library
             </button>
 
             <button
@@ -208,14 +208,14 @@ export function Header({ onNavigate, currentPage = 'home', onThemeChange }: Head
               </button>
               
               <button
-                onClick={() => handleNavigation('books')}
+                onClick={() => handleNavigation('library')}
                 className={`px-4 py-3 rounded-lg font-semibold text-left transition-all ${
-                  currentPage === 'books'
+                  currentPage === 'library'
                     ? 'bg-morpho-primary text-white'
                     : 'text-gray-300 hover:text-white hover:bg-white/10'
                 }`}
               >
-                📚 Books
+                📚 Library
               </button>
 
               <button

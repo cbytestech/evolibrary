@@ -1,24 +1,16 @@
 import { useState } from 'react'
 import { HomePage } from './pages/HomePage'
-import { BooksPage } from './pages/BooksPage'
+import { LibraryPage } from './pages/LibraryPage'
 import { SettingsPage } from './pages/SettingsPage'
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState<'home' | 'books' | 'settings'>('home')
+  const [currentPage, setCurrentPage] = useState<'home' | 'library' | 'settings'>('home')
   const [currentTheme, setCurrentTheme] = useState(() => {
     return localStorage.getItem('colorTheme') || 'morpho'
   })
-  const [settingsSection, setSettingsSection] = useState<string>('libraries')
 
-  const handleNavigate = (page: 'home' | 'books' | 'settings') => {
-    console.log('[App] Navigating to:', page)
+  const handleNavigate = (page: 'home' | 'library' | 'settings') => {
     setCurrentPage(page)
-  }
-
-  const handleNavigateToLogs = () => {
-    console.log('[App] Navigating to logs section in settings')
-    setSettingsSection('logging')
-    setCurrentPage('settings')
   }
 
   const handleThemeChange = (theme: string) => {
@@ -29,17 +21,15 @@ export default function App() {
     <>
       {currentPage === 'home' && (
         <HomePage 
-          onNavigate={handleNavigate}
-          onNavigateToLogs={handleNavigateToLogs}
+          onNavigate={handleNavigate} 
           currentTheme={currentTheme}
           onThemeChange={handleThemeChange}
         />
       )}
       
-      {currentPage === 'books' && (
-        <BooksPage 
-          onNavigate={handleNavigate}
-          onNavigateToLogs={handleNavigateToLogs}
+      {currentPage === 'library' && (
+        <LibraryPage 
+          onNavigate={handleNavigate} 
           currentTheme={currentTheme}
           onThemeChange={handleThemeChange}
         />
@@ -47,11 +37,9 @@ export default function App() {
 
       {currentPage === 'settings' && (
         <SettingsPage 
-          onNavigate={handleNavigate}
-          onNavigateToLogs={handleNavigateToLogs}
+          onNavigate={handleNavigate} 
           currentTheme={currentTheme}
           onThemeChange={handleThemeChange}
-          initialSection={settingsSection}
         />
       )}
     </>

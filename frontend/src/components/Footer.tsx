@@ -11,7 +11,7 @@ interface HealthStatus {
 }
 
 interface FooterProps {
-  onNavigate?: (page: 'home' | 'books' | 'settings') => void
+  onNavigate?: (page: 'home' | 'library' | 'settings') => void
   onNavigateToLogs?: () => void
 }
 
@@ -174,7 +174,7 @@ export function Footer({ onNavigate, onNavigateToLogs }: FooterProps) {
               {localIp && publicIp && <span>|</span>}
               {publicIp ? (
                 <span className="font-mono">
-                  🌐 {publicIp}
+                  🌍 {publicIp}
                 </span>
               ) : (
                 <span className="text-gray-400 dark:text-gray-600 animate-pulse">

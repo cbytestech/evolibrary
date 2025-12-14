@@ -115,7 +115,18 @@ export function LibrariesSettings() {
 
   const handleLibraryAdded = () => {
     setShowAddModal(false)
+    setSelectedLibrary(null)
     fetchLibraries()
+  }
+
+  const handleEdit = (library: Library) => {
+    setSelectedLibrary(library)
+    setShowAddModal(true)
+  }
+
+  const handleCloseModal = () => {
+    setShowAddModal(false)
+    setSelectedLibrary(null)
   }
 
   // 🎁 SECRET FEATURE #3: Calculate total stats
@@ -252,7 +263,7 @@ export function LibrariesSettings() {
               library={library}
               stats={showStats ? stats[library.id] : undefined}
               onScan={() => handleScan(library.id)}
-              onEdit={(lib) => setSelectedLibrary(lib)}
+              onEdit={handleEdit}
               onDelete={() => handleDelete(library.id)}
               onRefresh={fetchLibraries}
             />
@@ -263,7 +274,8 @@ export function LibrariesSettings() {
       {/* Add Modal */}
       {showAddModal && (
         <AddLibraryModal
-          onClose={() => setShowAddModal(false)}
+          library={selectedLibrary}
+          onClose={handleCloseModal}
           onSuccess={handleLibraryAdded}
         />
       )}

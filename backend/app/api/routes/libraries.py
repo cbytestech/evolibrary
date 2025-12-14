@@ -4,6 +4,8 @@ from sqlalchemy import select, text
 from typing import List, Optional
 from datetime import datetime
 import logging
+import os
+from pathlib import Path
 
 from backend.app.db.database import get_db
 from backend.app.db.models.library import Library
@@ -13,6 +15,54 @@ from pydantic import BaseModel
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/libraries", tags=["libraries"])
+
+
+# Helper function for folder creation
+def create_library_folder(path: str) -> tuple[bool, str]:
+    """
+    Create library folder with proper PUID/PGID permissions
+    Returns: (success: bool, message: str)
+    """
+    try:
+        folder = Path(path)
+        
+        # Check if already exists
+        if folder.exists():
+            if folder.is_dir():
+                logger.info(f"📁 Library folder already exists: {path}")
+                return True, f"Folder already exists: {path}"
+            else:
+                logger.error(f"❌ Path exists but is not a directory: {path}")
+                return False, f"Path exists but is not a directory: {path}"
+        
+        # Get PUID/PGID from environment
+        try:
+            puid = int(os.getenv('PUID', '0'))
+            pgid = int(os.getenv('PGID', '0'))
+        except (ValueError, TypeError):
+            logger.warning("⚠️ Invalid PUID/PGID, using defaults (0, 0)")
+            puid, pgid = 0, 0
+        
+        # Create directory
+        folder.mkdir(parents=True, exist_ok=True)
+        logger.info(f"✅ Created library folder: {path}")
+        
+        # Set ownership
+        try:
+            os.chown(path, puid, pgid)
+            logger.info(f"✅ Set ownership to {puid}:{pgid} for {path}")
+        except PermissionError:
+            logger.warning(f"⚠️ Could not set ownership for {path} (permission denied)")
+            # Don't fail - folder was still created
+        except Exception as e:
+            logger.warning(f"⚠️ Could not set ownership: {e}")
+        
+        return True, f"Created folder: {path}"
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to create folder {path}: {e}")
+        return False, f"Failed to create folder: {str(e)}"
+
 
 
 # Pydantic schemas
@@ -100,6 +150,13 @@ async def create_library(
     if result.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Library name already exists")
     
+    # Auto-create folder if it doesn't exist
+    success, message = create_library_folder(library_data.path)
+    if not success:
+        raise HTTPException(status_code=500, detail=message)
+    
+    logger.info(f"📁 {message}")
+    
     # Create library
     library = Library(
         name=library_data.name,
@@ -126,6 +183,7 @@ async def create_library(
     return library.to_dict()
 
 
+
 @router.put("/{library_id}")
 async def update_library(
     library_id: int,
@@ -139,8 +197,15 @@ async def update_library(
     if not library:
         raise HTTPException(status_code=404, detail="Library not found")
     
-    # Update fields
+    # If path is being changed, create new folder
     update_data = library_data.dict(exclude_unset=True)
+    if 'path' in update_data and update_data['path'] != library.path:
+        success, message = create_library_folder(update_data['path'])
+        if not success:
+            raise HTTPException(status_code=500, detail=message)
+        logger.info(f"📁 {message}")
+    
+    # Update fields
     for field, value in update_data.items():
         setattr(library, field, value)
     

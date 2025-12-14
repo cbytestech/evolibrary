@@ -12,7 +12,7 @@ import { IndexersSettings } from '../components/settings/IndexersSettings'
 import { ComingSoonSettings } from '../components/settings/ComingSoonSettings'
 
 interface SettingsPageProps {
-  onNavigate?: (page: 'home' | 'books' | 'settings') => void
+  onNavigate?: (page: 'home' | 'library' | 'settings') => void
   onNavigateToLogs?: () => void
   currentTheme?: string
   onThemeChange?: (theme: string) => void

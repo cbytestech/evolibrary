@@ -12,7 +12,7 @@ export function SettingsLayout({ children, currentSection, onSectionChange }: Se
     { id: 'ui', icon: '🎨', label: 'UI', description: 'Themes and appearance' },
     { id: 'apps', icon: '🔌', label: 'Apps', description: 'External connections' },
     { id: 'indexers', icon: '🔍', label: 'Indexers', description: 'Search providers' },
-    { id: 'download-clients', icon: '⬇️', label: 'Download Clients', description: 'Deluge, qBittorrent', badge: 'Soon' },
+    { id: 'download-clients', icon: '📥', label: 'Download Clients', description: 'Deluge, qBittorrent' },
     { id: 'import-lists', icon: '📥', label: 'Import Lists', description: 'Auto-import from lists', badge: 'Soon' },
     { id: 'connect', icon: '🔔', label: 'Connect', description: 'Notifications & webhooks', badge: 'Soon' },
     { id: 'metadata', icon: '📋', label: 'Metadata', description: 'Google Books & sources', badge: 'Soon' },

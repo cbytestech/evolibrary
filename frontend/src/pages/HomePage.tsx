@@ -2,7 +2,7 @@ import { Header } from '../components/Header'
 import { Footer } from '../components/Footer'
 
 interface HomePageProps {
-  onNavigate?: (page: 'home' | 'books' | 'settings') => void
+  onNavigate?: (page: 'home' | 'library' | 'settings') => void
   onNavigateToLogs?: () => void
   currentTheme?: string
   onThemeChange?: (theme: string) => void
@@ -25,7 +25,7 @@ export function HomePage({ onNavigate, onNavigateToLogs, currentTheme = 'morpho'
           
           {/* Hero Section */}
           <div className="text-center mb-16">
-            <div className="text-8xl mb-6">🦠</div>
+            <div className="text-8xl mb-6">🦋</div>
             <h1 className="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-4">
               Welcome to Evolibrary
             </h1>
@@ -38,12 +38,12 @@ export function HomePage({ onNavigate, onNavigateToLogs, currentTheme = 'morpho'
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             
             <button
-              onClick={() => onNavigate?.('books')}
+              onClick={() => onNavigate?.('library')}
               className="p-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl transition-all group"
             >
               <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">📚</div>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                Browse Books
+                Browse Library
               </h2>
               <p className="text-gray-600 dark:text-gray-400">
                 View your collection

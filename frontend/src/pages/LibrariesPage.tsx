@@ -1,13 +1,15 @@
+// File: frontend/src/pages/LibrariesPage.tsx
 import { useEffect, useState } from 'react'
 import { Library, LibraryStats } from '../types/library'
 import { Header } from '../components/Header'
 import { Footer } from '../components/Footer'
 import { LibraryCard } from '../components/LibraryCard'
 import { AddLibraryModal } from '../components/AddLibraryModal'
+import { ConfirmModal } from '../components/ConfirmModal'
 import { API_BASE_URL } from '../config/api'
 
 interface LibrariesPageProps {
-  onNavigate?: (page: 'home' | 'books' | 'settings') => void
+  onNavigate?: (page: 'home' | 'library' | 'settings') => void
   onNavigateToLogs?: () => void
   currentTheme?: string
   onThemeChange?: (theme: string) => void
@@ -24,6 +26,10 @@ export function LibrariesPage({
   const [error, setError] = useState<string | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
   const [selectedLibrary, setSelectedLibrary] = useState<Library | null>(null)
+  
+  // Delete confirmation modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [libraryToDelete, setLibraryToDelete] = useState<Library | null>(null)
   
   // 🎁 SECRET FEATURE #3: Library statistics dashboard
   const [stats, setStats] = useState<Record<number, LibraryStats>>({})
@@ -114,14 +120,17 @@ export function LibrariesPage({
     }
   }
 
-  const handleDelete = async (libraryId: number) => {
-    if (!confirm('Are you sure you want to delete this library?')) {
-      return
-    }
+  const handleDeleteClick = (library: Library) => {
+    setLibraryToDelete(library)
+    setShowDeleteModal(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!libraryToDelete) return
 
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/libraries/${libraryId}`,
+        `${API_BASE_URL}/api/libraries/${libraryToDelete.id}`,
         { method: 'DELETE' }
       )
 
@@ -130,6 +139,7 @@ export function LibrariesPage({
       }
 
       await fetchLibraries()
+      setLibraryToDelete(null)
     } catch (err) {
       console.error('Delete failed:', err)
       alert('Failed to delete library')
@@ -138,7 +148,18 @@ export function LibrariesPage({
 
   const handleLibraryAdded = () => {
     setShowAddModal(false)
+    setSelectedLibrary(null)
     fetchLibraries()
+  }
+
+  const handleEdit = (library: Library) => {
+    setSelectedLibrary(library)
+    setShowAddModal(true)
+  }
+
+  const handleCloseModal = () => {
+    setShowAddModal(false)
+    setSelectedLibrary(null)
   }
 
   // 🎁 SECRET FEATURE #3: Calculate total stats across all libraries
@@ -285,8 +306,8 @@ export function LibrariesPage({
                   library={library}
                   stats={showStats ? stats[library.id] : undefined}
                   onScan={() => handleScan(library.id)}
-                  onEdit={(lib) => setSelectedLibrary(lib)}
-                  onDelete={() => handleDelete(library.id)}
+                  onEdit={handleEdit}
+                  onDelete={() => handleDeleteClick(library)}
                   onRefresh={fetchLibraries}
                 />
               ))}
@@ -301,10 +322,35 @@ export function LibrariesPage({
       {/* Add Library Modal */}
       {showAddModal && (
         <AddLibraryModal
-          onClose={() => setShowAddModal(false)}
+          library={selectedLibrary}
+          onClose={handleCloseModal}
           onSuccess={handleLibraryAdded}
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false)
+          setLibraryToDelete(null)
+        }}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Library"
+        message={
+          <div>
+            <p className="mb-2">
+              Are you sure you want to delete <strong className="text-gray-900 dark:text-white">{libraryToDelete?.name}</strong>?
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              This will remove the library configuration but won't delete your actual files.
+            </p>
+          </div>
+        }
+        confirmText="Delete"
+        cancelText="Cancel"
+        danger={true}
+      />
     </div>
   )
 }

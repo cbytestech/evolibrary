@@ -1,12 +1,44 @@
+// File: frontend/src/components/BookCard.tsx
 import { Book } from '../types/book'
 
 interface BookCardProps {
   book: Book
+  status?: 'available' | 'monitoring' | 'requesting' // Status determines banner
+  onBannerClick?: () => void
 }
 
-export function BookCard({ book }: BookCardProps) {
+export function BookCard({ book, status = 'available', onBannerClick }: BookCardProps) {
+  // Banner configuration based on status
+  const getBannerConfig = () => {
+    switch (status) {
+      case 'available':
+        return {
+          icon: '📖',
+          text: 'View Details',
+          bgClass: 'bg-morpho-primary hover:bg-morpho-dark',
+          textClass: 'text-white'
+        }
+      case 'monitoring':
+        return {
+          icon: '👁️',
+          text: 'Monitoring',
+          bgClass: 'bg-amber-500 hover:bg-amber-600',
+          textClass: 'text-white'
+        }
+      case 'requesting':
+        return {
+          icon: '➕',
+          text: 'Request',
+          bgClass: 'bg-emerald-500 hover:bg-emerald-600',
+          textClass: 'text-white'
+        }
+    }
+  }
+
+  const banner = getBannerConfig()
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-gray-700 flex flex-col h-full">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-gray-700 flex flex-col h-full group">
       {/* Book Cover */}
       <div className="relative h-48 sm:h-56 md:h-64 bg-gradient-to-br from-morpho-primary/10 to-morpho-dark/10 flex items-center justify-center flex-shrink-0">
         {book.cover_url ? (
@@ -37,7 +69,7 @@ export function BookCard({ book }: BookCardProps) {
 
         {/* Author */}
         <p className="text-xs sm:text-sm text-morpho-dark dark:text-morpho-light font-semibold mb-2">
-          {book.author_name}
+          {book.author_name || 'Unknown Author'}
         </p>
 
         {/* Description */}
@@ -62,24 +94,33 @@ export function BookCard({ book }: BookCardProps) {
         )}
 
         {/* Footer Info */}
-        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-2 sm:pt-3 border-t border-gray-200 dark:border-gray-700 mt-auto">
+        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mt-auto mb-3">
           <div>
-            {book.page_count && (
-              <span>{book.page_count} pages</span>
+            {book.page_count && book.page_count > 0 && (
+              <span>{book.page_count} {book.file_format === 'audiobook' ? 'files' : 'pages'}</span>
             )}
           </div>
-          <div>
+          <div className="flex items-center gap-2">
+            {book.file_format && (
+              <span className="uppercase text-[10px] font-bold bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded">
+                {book.file_format}
+              </span>
+            )}
             {book.published_date && (
               <span>{new Date(book.published_date).getFullYear()}</span>
             )}
           </div>
         </div>
-
-        {/* Action Button */}
-        <button className="mt-2 sm:mt-3 w-full bg-morpho-primary hover:bg-morpho-dark text-white font-semibold py-2 px-3 sm:px-4 rounded-lg transition-colors duration-200 text-sm sm:text-base">
-          View Details
-        </button>
       </div>
+
+      {/* Status Banner - Ombi Style (Smaller) */}
+      <button
+        onClick={onBannerClick}
+        className={`w-full py-2 font-semibold text-xs sm:text-sm transition-colors duration-200 flex items-center justify-center gap-2 ${banner.bgClass} ${banner.textClass}`}
+      >
+        <span className="text-sm">{banner.icon}</span>
+        <span>{banner.text}</span>
+      </button>
     </div>
   )
 }
