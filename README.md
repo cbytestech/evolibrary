@@ -2,14 +2,14 @@
 
 <div align="center">
 
-![Evolibrary Logo](https://via.placeholder.com/400x200/5A5A42/F5EFE6?text=Evolibrary)
+<img width="87" height="63" alt="Screenshot 2025-12-23 010033" src="https://github.com/user-attachments/assets/51d1073b-82ea-4547-add9-891a8c86d4e1" />
 
 **"Evolve Your Reading!"**
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/cookiebytestech/evolibrary?style=flat-square)](https://hub.docker.com/r/cookiebytestech/evolibrary)
 [![GitHub Stars](https://img.shields.io/github/stars/cookiebytestech/evolibrary?style=flat-square)](https://github.com/cookiebytestech/evolibrary)
 [![License](https://img.shields.io/github/license/cookiebytestech/evolibrary?style=flat-square)](LICENSE)
-[![Discord](https://img.shields.io/discord/YOUR_DISCORD_ID?style=flat-square&logo=discord)](https://discord.gg/YOUR_INVITE)
+[![Discord](https://img.shields.io/discord/532642138781908992?style=flat-square&logo=discord)](https://discord.gg/nHp62R8s)
 
 **The Ultimate Self-Hosted Library Manager for Books, Audiobooks, Comics, Magazines & More**
 
