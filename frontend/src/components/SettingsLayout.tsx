@@ -1,3 +1,5 @@
+// File: frontend/src/components/SettingsLayout.tsx
+
 import { ReactNode } from 'react'
 
 interface SettingsLayoutProps {
@@ -9,7 +11,9 @@ interface SettingsLayoutProps {
 export function SettingsLayout({ children, currentSection, onSectionChange }: SettingsLayoutProps) {
   const sections = [
     { id: 'libraries', icon: '📚', label: 'Libraries', description: 'Manage book collections' },
-    { id: 'ui', icon: '🎨', label: 'UI', description: 'Themes and appearance' },
+    { id: 'quality-profiles', icon: '⚙️', label: 'Quality Profiles', description: 'Format preferences' },
+    { id: 'ui', icon: '🎨', label: 'UI', description: 'Interface preferences' },
+    { id: 'themes', icon: '🦋', label: 'Themes', description: 'Visual themes & evolution' }, // NEW - Morpho Evolution
     { id: 'apps', icon: '🔌', label: 'Apps', description: 'External connections' },
     { id: 'indexers', icon: '🔍', label: 'Indexers', description: 'Search providers' },
     { id: 'download-clients', icon: '📥', label: 'Download Clients', description: 'Deluge, qBittorrent' },

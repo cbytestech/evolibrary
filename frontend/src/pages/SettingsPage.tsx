@@ -1,3 +1,5 @@
+// File: frontend/src/pages/SettingsPage.tsx
+
 import { useState, useEffect } from 'react'
 import { Header } from '../components/Header'
 import { Footer } from '../components/Footer'
@@ -7,12 +9,14 @@ import { UISettings } from '../components/settings/UISettings'
 import { LoggingSettings } from '../components/settings/LoggingSettings'
 import { HealthSettings } from '../components/settings/HealthSettings'
 import { GeneralSettings } from '../components/settings/GeneralSettings'
+import { getThemeBackground } from '../utils/themes'
 import { AppsSettings } from '../components/settings/AppsSettings'
 import { IndexersSettings } from '../components/settings/IndexersSettings'
 import { ComingSoonSettings } from '../components/settings/ComingSoonSettings'
+import { ThemesSettings } from '../components/ThemesSettings'
 
 interface SettingsPageProps {
-  onNavigate?: (page: 'home' | 'library' | 'settings') => void
+  onNavigate?: (page: 'home' | 'library' | 'settings' | 'search' | 'activity' | 'achievements') => void
   onNavigateToLogs?: () => void
   currentTheme?: string
   onThemeChange?: (theme: string) => void
@@ -34,19 +38,14 @@ export function SettingsPage({
     setCurrentSection(initialSection)
   }, [initialSection])
 
-  const getBackgroundClass = () => {
-    if (currentTheme === 'homestead') {
-      return 'bg-amber-50 dark:bg-gradient-to-br dark:from-amber-950 dark:via-orange-950 dark:to-amber-950'
-    }
-    return 'bg-gray-50 dark:bg-gradient-to-br dark:from-gray-900 dark:via-emerald-950 dark:to-gray-900'
-  }
-
   const renderSection = () => {
     switch (currentSection) {
       case 'libraries':
         return <LibrariesSettings />
       case 'ui':
         return <UISettings currentTheme={currentTheme} onThemeChange={onThemeChange} />
+      case 'themes':
+        return <ThemesSettings currentTheme={currentTheme} onThemeChange={onThemeChange} />
       case 'apps':
         return <AppsSettings />
       case 'indexers':
@@ -75,7 +74,7 @@ export function SettingsPage({
         onThemeChange={onThemeChange} 
       />
       
-      <main className={`flex-1 ${getBackgroundClass()} pt-20 overflow-hidden`}>
+      <main className={`flex-1 ${getThemeBackground(currentTheme)} pt-20 overflow-hidden`}>
         <SettingsLayout 
           currentSection={currentSection}
           onSectionChange={setCurrentSection}

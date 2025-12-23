@@ -1,21 +1,26 @@
+// File: frontend/src/types/book.ts
+
 export interface Book {
   id: number
   title: string
-  author_name: string
+  author_name: string | null  // Can be null from API
   author_id?: number
-  isbn?: string
-  publisher?: string
-  published_date?: string
-  description?: string
-  cover_url?: string
-  language: string
+  isbn?: string | null
+  publisher?: string | null
+  published_date?: string | null
+  description?: string | null
+  cover_url?: string | null
+  language?: string | null  // Optional and nullable
   page_count?: number
-  categories: string[]
-  file_path?: string
-  file_format?: string  // File extension (epub, mobi, pdf, m4b, mp3, cbz, etc.)
-  file_size?: number
-  created_at: string
-  updated_at: string
+  categories?: string[]  // Optional
+  created_at?: string  // Optional
+  updated_at?: string  // Optional
+  file_path?: string  // File path on disk
+  media_type?: string  // ebook, audiobook, comic, magazine
+  file_format?: string  // ADDED: epub, mobi, pdf, m4b, etc.
+  status?: string  // available, monitoring, requesting, downloading
+  monitored?: boolean  // Is this book being monitored for downloads
+  file_size?: number  // File size in bytes
 }
 
 export interface BookListResponse {

@@ -6,7 +6,8 @@ import logging
 from typing import Optional
 from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from datetime import datetime, timedelta
+from sqlalchemy import func
 from backend.app.db.models import Book, Author
 from backend.app.schemas.books import BookCreate, BookUpdate, BookSearchParams
 

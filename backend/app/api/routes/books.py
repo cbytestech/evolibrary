@@ -6,7 +6,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
-
+from datetime import datetime, timedelta
+from sqlalchemy import func
 from backend.app.db.database import get_db
 from backend.app.db.models import Book, Library
 from backend.app.schemas.books import (
@@ -213,6 +214,47 @@ async def search_books(
     )
 
 
+@router.get("/stats")
+async def get_library_stats(db: AsyncSession = Depends(get_db)):
+    """
+    Get library statistics for achievements and homepage
+    
+    Returns:
+        - total_books: Total number of books in library
+        - monitored_books: Number of books being monitored
+        - recent_downloads: Books added in last 7 days
+    """
+    try:
+        # Count total books
+        total_result = await db.execute(select(func.count(Book.id)))
+        total_books = total_result.scalar() or 0
+        
+        # Count monitored books
+        monitored_result = await db.execute(
+            select(func.count(Book.id)).where(Book.monitored == True)
+        )
+        monitored_books = monitored_result.scalar() or 0
+        
+        # Count recent downloads (last 7 days)
+        seven_days_ago = datetime.now() - timedelta(days=7)
+        recent_result = await db.execute(
+            select(func.count(Book.id)).where(
+                Book.created_at >= seven_days_ago
+            )
+        )
+        recent_downloads = recent_result.scalar() or 0
+        
+        return {
+            "total_books": total_books,
+            "monitored_books": monitored_books,
+            "recent_downloads": recent_downloads
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to fetch stats: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/{book_id}", response_model=BookResponse)
 async def get_book(
     book_id: int,
@@ -235,11 +277,24 @@ async def create_book(
     db: AsyncSession = Depends(get_db)
 ):
     """Create a new book"""
-    book = Book(**book_data.model_dump())
+    import json
+    
+    # Convert to dict
+    book_dict = book_data.model_dump()
+    
+    # Serialize categories list to JSON string for SQLite
+    if 'categories' in book_dict and book_dict['categories'] is not None:
+        if isinstance(book_dict['categories'], list):
+            book_dict['categories'] = json.dumps(book_dict['categories'])
+    
+    # Create book
+    book = Book(**book_dict)
     db.add(book)
     await db.commit()
     await db.refresh(book)
-    return book
+    
+    # Deserialize for response
+    return deserialize_book_categories(book, db)
 
 
 @router.put("/{book_id}", response_model=BookResponse)

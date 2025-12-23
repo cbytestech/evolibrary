@@ -2,6 +2,8 @@
 Database migration helper
 Automatically adds missing columns to existing tables
 """
+# File: backend/app/db/migrations.py
+
 import logging
 from sqlalchemy import inspect, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,13 +23,9 @@ async def run_migrations(db: AsyncSession):
             "type": "VARCHAR(200)",
             "description": "Admin password for apps like Jackett"
         },
-        # Add future migrations here
-        # {
-        #     "table": "another_table",
-        #     "column": "new_column",
-        #     "type": "INTEGER",
-        #     "description": "Description of what this column does"
-        # },
+        # ADDED - NEW: Quality profiles table migrations would go here
+        # Note: For new tables, we use create_all() instead of ALTER TABLE
+        # The quality_profiles table will be created automatically via Base.metadata.create_all()
     ]
     
     for migration in migrations:
@@ -57,5 +55,27 @@ async def run_migrations(db: AsyncSession):
             await db.rollback()
             # Don't raise - let the app continue even if migration fails
             # The column might already exist or the error might be non-critical
+    
+    # ADDED - NEW: Create quality_profiles table if it doesn't exist
+    try:
+        from backend.app.db.models.quality_profile import QualityProfile
+        from backend.app.db.database import Base
+        
+        # Check if quality_profiles table exists
+        result = await db.execute(
+            text("SELECT name FROM sqlite_master WHERE type='table' AND name='quality_profiles'")
+        )
+        table_exists = result.fetchone() is not None
+        
+        if not table_exists:
+            logger.info("🔄 Creating quality_profiles table...")
+            # Table will be created via Base.metadata.create_all() in init_db()
+            logger.info("✅ Quality profiles table will be created on next startup")
+        else:
+            logger.debug("✓ Quality profiles table already exists")
+            
+    except Exception as e:
+        logger.error(f"❌ Error checking quality_profiles table: {e}")
+        # Non-critical, continue
     
     logger.info("🎉 Database migrations complete!")

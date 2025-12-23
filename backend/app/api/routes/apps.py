@@ -1,11 +1,15 @@
+# File: backend/app/api/routes/apps.py
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import List
 from datetime import datetime
+import logging
 
 from backend.app.db.database import get_db
 from backend.app.db.models.app import App
+from backend.app.db.models.indexer import Indexer
 from backend.app.schemas.apps import (
     AppCreate,
     AppUpdate,
@@ -17,6 +21,7 @@ from backend.app.schemas.apps import (
 )
 from backend.app.services.app_tester import app_tester
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/apps", tags=["apps"])
 
 @router.get("", response_model=AppListResponse)
@@ -60,7 +65,7 @@ async def create_app(
     app_data: AppCreate,
     db: AsyncSession = Depends(get_db)
 ):
-    """Create a new app connection"""
+    """Create a new app connection and auto-sync indexers"""
     
     # Check for duplicate names
     result = await db.execute(
@@ -88,6 +93,16 @@ async def create_app(
     db.add(new_app)
     await db.commit()
     await db.refresh(new_app)
+    
+    # AUTO-SYNC INDEXERS for Prowlarr/Jackett
+    if new_app.app_type in ['prowlarr', 'jackett']:
+        try:
+            from backend.app.services.indexer_sync import indexer_sync_service
+            await indexer_sync_service.sync_app_indexers(new_app.id, db)
+            logger.info(f"✅ Auto-synced indexers for {new_app.name}")
+        except Exception as e:
+            logger.warning(f"⚠️ Auto-sync failed for {new_app.name}: {e}")
+            # Don't fail app creation if sync fails
     
     return AppResponse.model_validate(new_app)
 
@@ -132,7 +147,7 @@ async def delete_app(
     app_id: int,
     db: AsyncSession = Depends(get_db)
 ):
-    """Delete an app connection"""
+    """Delete an app connection and all related data (cascade delete)"""
     result = await db.execute(select(App).where(App.id == app_id))
     app = result.scalar_one_or_none()
     
@@ -142,10 +157,58 @@ async def delete_app(
             detail=f"App with ID {app_id} not found"
         )
     
+    # Delete related indexers first (cascade delete)
+    indexer_result = await db.execute(
+        select(Indexer).where(Indexer.app_id == app_id)
+    )
+    indexers = indexer_result.scalars().all()
+    
+    for indexer in indexers:
+        await db.delete(indexer)
+    
+    # Then delete the app
     await db.delete(app)
     await db.commit()
     
     return None
+
+@router.post("/cleanup")
+async def cleanup_orphaned_data(
+    db: AsyncSession = Depends(get_db)
+):
+    """Clean up orphaned indexers and other related data"""
+    try:
+        # Get all valid app IDs
+        app_result = await db.execute(select(App.id))
+        valid_app_ids = [row[0] for row in app_result.all()]
+        
+        # Find orphaned indexers
+        if valid_app_ids:
+            orphaned_result = await db.execute(
+                select(Indexer).where(Indexer.app_id.notin_(valid_app_ids))
+            )
+        else:
+            orphaned_result = await db.execute(select(Indexer))
+        
+        orphaned_indexers = orphaned_result.scalars().all()
+        deleted_count = len(orphaned_indexers)
+        
+        for indexer in orphaned_indexers:
+            await db.delete(indexer)
+        
+        await db.commit()
+        
+        return {
+            "success": True,
+            "deleted_indexers": deleted_count,
+            "message": f"Cleaned up {deleted_count} orphaned indexer(s)"
+        }
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to clean up: {str(e)}"
+        )
 
 @router.post("/test", response_model=AppTestResponse)
 async def test_app_connection(

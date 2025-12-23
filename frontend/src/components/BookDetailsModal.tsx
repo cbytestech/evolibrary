@@ -41,12 +41,12 @@ export function BookDetailsModal({ book, onClose, onUpdate }: BookDetailsModalPr
   
   // Manual search fields
   const [searchTitle, setSearchTitle] = useState(book.title)
-  const [searchAuthor, setSearchAuthor] = useState(book.author_name)
+  const [searchAuthor, setSearchAuthor] = useState(book.author_name || '')  // FIXED: Handle null
   const [searchISBN, setSearchISBN] = useState(book.isbn || '')
   
   // Manual edit fields
   const [editTitle, setEditTitle] = useState(book.title)
-  const [editAuthor, setEditAuthor] = useState(book.author_name)
+  const [editAuthor, setEditAuthor] = useState(book.author_name || '')  // FIXED: Handle null
   const [editISBN, setEditISBN] = useState(book.isbn || '')
   const [editPublisher, setEditPublisher] = useState(book.publisher || '')
   const [editPublishedDate, setEditPublishedDate] = useState(book.published_date || '')

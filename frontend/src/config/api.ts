@@ -1,20 +1,13 @@
-// API Configuration
-// Supports different environments (dev, production, docker)
+// frontend/src/config/api.ts
 
 const getApiBaseUrl = (): string => {
-  // 1. Check for environment variable (set during build)
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL
-  }
-
-  // 2. Check if we're in production (on Pi)
-  // Frontend is on :3001, backend is on :8001
-  if (window.location.port === '3001') {
-    return `${window.location.protocol}//${window.location.hostname}:8001`
-  }
-
-  // 3. Development fallback
-  return 'http://localhost:8000'
+  // Always use the same hostname as the frontend, just change the port to 8001
+  // This works for:
+  // - http://10.0.0.50:3001 → http://10.0.0.50:8001
+  // - http://displaypotato.duckdns.org:3001 → http://displaypotato.duckdns.org:8001
+  // - http://localhost:3001 → http://localhost:8001
+  
+  return `${window.location.protocol}//${window.location.hostname}:8001`
 }
 
 export const API_BASE_URL = getApiBaseUrl()

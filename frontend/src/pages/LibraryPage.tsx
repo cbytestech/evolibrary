@@ -7,9 +7,10 @@ import { Header } from '../components/Header'
 import { Footer } from '../components/Footer'
 import { BookDetailsModal } from '../components/BookDetailsModal'
 import { API_BASE_URL } from '../config/api'
+import { getThemeBackground } from '../utils/themes'
 
 interface LibraryPageProps {
-  onNavigate?: (page: 'home' | 'library' | 'settings') => void
+  onNavigate?: (page: 'home' | 'library' | 'settings' | 'search' | 'activity' | 'achievements') => void
   onNavigateToLogs?: () => void
   currentTheme?: string
   onThemeChange?: (theme: string) => void
@@ -52,14 +53,6 @@ export function LibraryPage({ onNavigate, onNavigateToLogs, currentTheme = 'morp
   const [libraries, setLibraries] = useState<Library[]>([])
   const [checkingLibraries, setCheckingLibraries] = useState(true)
   const [selectedBook, setSelectedBook] = useState<Book | null>(null)
-
-  // Theme-based background classes
-  const getBackgroundClass = () => {
-    if (currentTheme === 'homestead') {
-      return 'bg-amber-50 dark:bg-gradient-to-br dark:from-amber-950 dark:via-orange-950 dark:to-amber-950'
-    }
-    return 'bg-gray-50 dark:bg-gradient-to-br dark:from-gray-900 dark:via-emerald-950 dark:to-gray-900'
-  }
 
   // Check if libraries exist for current tab type
   const hasLibraryForActiveTab = () => {
@@ -180,7 +173,7 @@ export function LibraryPage({ onNavigate, onNavigateToLogs, currentTheme = 'morp
   return (
     <>
       <Header onNavigate={onNavigate} currentPage="library" onThemeChange={onThemeChange} />
-      <div className={`min-h-screen ${getBackgroundClass()} pt-24`}>
+      <div className={`min-h-screen ${getThemeBackground(currentTheme)} pt-24`}>
         <div className="container mx-auto px-4 py-6 sm:py-8">
         
         {/* Media Type Tabs */}

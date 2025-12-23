@@ -5,10 +5,12 @@ export function LoggingSettings() {
   const [logLevel, setLogLevel] = useState('INFO')
   const [logs, setLogs] = useState<string[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
+  const [autoScroll, setAutoScroll] = useState(true)
   const [command, setCommand] = useState('')
   const [commandOutput, setCommandOutput] = useState('')
   const [isExecuting, setIsExecuting] = useState(false)
   const [showSaved, setShowSaved] = useState(false)
+  const logsContainerRef = useRef<HTMLDivElement>(null)
   const logsEndRef = useRef<HTMLDivElement>(null)
   const eventSourceRef = useRef<EventSource | null>(null)
 
@@ -20,12 +22,22 @@ export function LoggingSettings() {
     }
   }, [])
 
-  // Auto-scroll logs
+  // Auto-scroll logs ONLY if enabled and user hasn't scrolled up
   useEffect(() => {
-    if (logsEndRef.current && isStreaming) {
-      logsEndRef.current.scrollIntoView({ behavior: 'smooth' })
+    if (autoScroll && logsEndRef.current && isStreaming) {
+      logsEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' })
     }
-  }, [logs, isStreaming])
+  }, [logs, autoScroll, isStreaming])
+
+  // Detect when user scrolls up manually
+  const handleLogScroll = () => {
+    if (logsContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = logsContainerRef.current
+      // If user is within 50px of bottom, enable auto-scroll
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 50
+      setAutoScroll(isNearBottom)
+    }
+  }
 
   const handleLogLevelChange = async (level: string) => {
     setLogLevel(level)
@@ -43,6 +55,7 @@ export function LoggingSettings() {
 
     setIsStreaming(true)
     setLogs([])
+    setAutoScroll(true) // Enable auto-scroll when starting
 
     // SSE endpoint for streaming logs
     const eventSource = new EventSource(`${API_BASE_URL}/api/admin/logs/stream`)
@@ -125,6 +138,19 @@ export function LoggingSettings() {
             📋 Live Log Stream
           </h3>
           <div className="flex gap-2">
+            {/* Auto-scroll toggle */}
+            <button
+              onClick={() => setAutoScroll(!autoScroll)}
+              className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+                autoScroll
+                  ? 'bg-morpho-primary text-white'
+                  : 'bg-gray-500 text-white'
+              }`}
+              title={autoScroll ? 'Auto-scroll enabled' : 'Auto-scroll paused'}
+            >
+              {autoScroll ? '⏸️ Pause' : '▶️ Follow'}
+            </button>
+            
             {!isStreaming ? (
               <button
                 onClick={startLogStream}
@@ -156,8 +182,32 @@ export function LoggingSettings() {
           </div>
         </div>
 
-        {/* Log Output - Fixed height, no page scroll */}
-        <div className="bg-gray-900 rounded-lg p-4 h-64 overflow-y-auto font-mono text-xs text-green-400">
+        {/* Status indicator */}
+        {isStreaming && (
+          <div className="mb-2 flex items-center gap-2 text-sm">
+            <span className={`px-2 py-1 rounded text-xs font-semibold ${
+              autoScroll 
+                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' 
+                : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300'
+            }`}>
+              {autoScroll ? '▶️ Following logs' : '⏸️ Paused - scroll down to resume'}
+            </span>
+            <span className="text-gray-600 dark:text-gray-400">
+              {logs.length} lines
+            </span>
+          </div>
+        )}
+
+        {/* Log Output - FIXED: Larger height, proper scroll container */}
+        <div 
+          ref={logsContainerRef}
+          onScroll={handleLogScroll}
+          className="bg-gray-900 rounded-lg p-4 font-mono text-xs text-green-400 overflow-y-auto"
+          style={{ 
+            height: '500px',  // Fixed height
+            maxHeight: '500px'  // Ensure it doesn't grow
+          }}
+        >
           {logs.length === 0 ? (
             <div className="text-gray-500 text-center py-8">
               {isStreaming ? 'Waiting for logs...' : 'Click "Start Stream" to view live logs'}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { API_BASE_URL } from '../../config/api'
+import { ConfirmModal } from '../ConfirmModal'
 
 interface App {
   id: number
@@ -77,6 +78,8 @@ export function AppsSettings() {
   const [testing, setTesting] = useState<number | null>(null)
   const [testingInModal, setTestingInModal] = useState(false)
   const [testResult, setTestResult] = useState<{status: string, message: string} | null>(null)
+
+  const [deleteConfirm, setDeleteConfirm] = useState<{id: number, name: string} | null>(null)
 
   // Form state
   const [formData, setFormData] = useState({
@@ -238,9 +241,8 @@ export function AppsSettings() {
     }
   }
 
-  const handleDeleteApp = async (appId: number) => {
-    if (!confirm('Are you sure you want to delete this app connection?')) return
 
+  const handleDeleteApp = async (appId: number) => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/apps/${appId}`, {
         method: 'DELETE'
@@ -249,11 +251,13 @@ export function AppsSettings() {
       if (response.ok) {
         fetchApps()
         showToast('App deleted successfully', 'success')
+        setDeleteConfirm(null)
       }
     } catch (error) {
       showToast('Failed to delete app', 'error')
     }
   }
+
 
   const showToast = (message: string, type: 'success' | 'error') => {
     const toast = document.createElement('div')
@@ -392,7 +396,7 @@ export function AppsSettings() {
                       ✏️
                     </button>
                     <button
-                      onClick={() => handleDeleteApp(app.id)}
+                      onClick={() => setDeleteConfirm({id: app.id, name: app.name})}
                       className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-sm font-medium transition-colors"
                       title="Delete connection"
                     >
@@ -523,6 +527,18 @@ export function AppsSettings() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        onConfirm={() => deleteConfirm && handleDeleteApp(deleteConfirm.id)}
+        title={`Delete ${deleteConfirm?.name}?`}
+        message="This will remove the app connection. You can add it back later if needed."
+        confirmText="Delete"
+        cancelText="Cancel"
+        danger={true}
+      />
     </div>
   )
 }

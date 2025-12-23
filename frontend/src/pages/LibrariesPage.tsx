@@ -7,9 +7,10 @@ import { LibraryCard } from '../components/LibraryCard'
 import { AddLibraryModal } from '../components/AddLibraryModal'
 import { ConfirmModal } from '../components/ConfirmModal'
 import { API_BASE_URL } from '../config/api'
+import { getThemeBackground } from '../utils/themes'
 
 interface LibrariesPageProps {
-  onNavigate?: (page: 'home' | 'library' | 'settings') => void
+  onNavigate?: (page: 'home' | 'library' | 'settings' | 'search' | 'activity' | 'achievements') => void
   onNavigateToLogs?: () => void
   currentTheme?: string
   onThemeChange?: (theme: string) => void
@@ -34,14 +35,6 @@ export function LibrariesPage({
   // 🎁 SECRET FEATURE #3: Library statistics dashboard
   const [stats, setStats] = useState<Record<number, LibraryStats>>({})
   const [showStats, setShowStats] = useState(false)
-
-  // Theme-based background
-  const getBackgroundClass = () => {
-    if (currentTheme === 'homestead') {
-      return 'bg-amber-50 dark:bg-gradient-to-br dark:from-amber-950 dark:via-orange-950 dark:to-amber-950'
-    }
-    return 'bg-gray-50 dark:bg-gradient-to-br dark:from-gray-900 dark:via-emerald-950 dark:to-gray-900'
-  }
 
   const fetchLibraries = async () => {
     setLoading(true)
@@ -178,7 +171,7 @@ export function LibrariesPage({
         onThemeChange={onThemeChange} 
       />
       
-      <main className={`flex-1 ${getBackgroundClass()} pt-24`}>
+      <main className={`flex-1 ${getThemeBackground(currentTheme)} pt-24`}>
         <div className="container mx-auto px-4 py-6 sm:py-8 max-w-6xl">
           
           {/* Page Header */}

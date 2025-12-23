@@ -26,16 +26,23 @@ export function UISettings({ currentTheme = 'morpho', onThemeChange }: UISetting
     {
       id: 'morpho',
       name: 'Morpho Blue',
-      description: 'Vibrant blue-green gradients inspired by morpho butterflies',
+      description: '🦋 Classic emerald theme with evolving mascot',
       gradient: 'from-emerald-400 to-blue-500',
       preview: 'bg-gradient-to-br from-emerald-400 to-blue-500'
     },
     {
       id: 'homestead',
       name: 'Homestead',
-      description: 'Warm autumn colors with orange and amber tones',
-      gradient: 'from-amber-500 to-orange-600',
-      preview: 'bg-gradient-to-br from-amber-500 to-orange-600'
+      description: '☕ Cozy reading nook with warm espresso & cream',
+      gradient: 'from-amber-500 to-stone-700',
+      preview: 'bg-gradient-to-br from-amber-500 to-stone-700'
+    },
+    {
+      id: 'forest',
+      name: 'Forest Retreat',
+      description: '🌲 Deep forest greens for nature lovers',
+      gradient: 'from-emerald-600 to-green-800',
+      preview: 'bg-gradient-to-br from-emerald-600 to-green-800'
     }
   ]
 
